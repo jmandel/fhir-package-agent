@@ -15,7 +15,7 @@ setup_agent
 test_start "C1: Agent auto-start"
 clean_cache
 
-output=$("$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" 2>&1)
+output=$("$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" --idle-seconds 2 2>&1)
 exit_code=$?
 
 if assert_exit_code 0 $exit_code && \
@@ -31,12 +31,12 @@ clean_cache
 
 # Run a quick ensure and check it returns promptly
 start=$(date +%s)
-"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" > /dev/null 2>&1
+"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" --idle-seconds 2 > /dev/null 2>&1
 end=$(date +%s)
 elapsed=$((end - start))
 
 # Should complete within reasonable time (agent exits quickly after work done)
-if [ $elapsed -lt 15 ]; then
+if [ $elapsed -lt 10 ]; then
   test_pass
   echo "    (Completed in ${elapsed}s)"
 else
@@ -52,9 +52,11 @@ mkdir -p "$TEST_CACHE" test-cache-2
 logfile1="$TEST_CACHE/c3-log1.txt"
 logfile2="test-cache-2/c3-log2.txt"
 
-"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" --log-level Debug > "$logfile1" 2>&1 &
-"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "test-cache-2" --log-level Debug > "$logfile2" 2>&1 &
-wait
+"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "$TEST_CACHE" --log-level Debug --idle-seconds 2 > "$logfile1" 2>&1 &
+pid1=$!
+"$AGENT" ensure hl7.fhir.us.core 6.1.0 --root "test-cache-2" --log-level Debug --idle-seconds 2 > "$logfile2" 2>&1 &
+pid2=$!
+wait $pid1 $pid2
 
 # Extract pipe names from logs
 pipe1=$(grep -o 'pipe=fhir-ig-agent-[^)]*' "$logfile1" | head -1 || true)

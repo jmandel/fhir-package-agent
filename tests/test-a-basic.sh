@@ -19,7 +19,7 @@ exit_code=$?
 
 if assert_exit_code 0 $exit_code && \
    assert_dir_exists "$TEST_CACHE/packages/hl7.fhir.us.core#6.1.0" && \
-   assert_file_exists "$TEST_CACHE/packages/hl7.fhir.us.core#6.1.0/package.json" && \
+   assert_file_exists "$TEST_CACHE/packages/hl7.fhir.us.core#6.1.0/package/package.json" && \
    assert_contains "$output" '"path"'; then
   test_pass
 else
@@ -45,8 +45,10 @@ fi
 
 # A3: Package Not Found
 test_start "A3: Package not found"
-output=$(timeout 10 "$AGENT" ensure nonexistent.package 99.99.99 --root "$TEST_CACHE" 2>&1 || true)
+set +e
+output=$("$AGENT" ensure nonexistent.package 99.99.99 --root "$TEST_CACHE" 2>&1)
 exit_code=$?
+set -e
 
 if assert_exit_code 1 $exit_code && \
    assert_contains "$output" '"error"' && \
@@ -59,7 +61,7 @@ if assert_exit_code 1 $exit_code && \
     test_fail "Staging directories left behind: $staging_count"
   fi
 else
-  test_fail "Package not found handling incorrect"
+  test_fail "Package not found handling incorrect (exit: $exit_code)"
 fi
 
 # A4: Multiple Packages Sequentially

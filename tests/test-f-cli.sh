@@ -83,8 +83,10 @@ fi
 
 # F8: Invalid Arguments
 test_start "F8: Invalid arguments"
+set +e
 output=$("$AGENT" invalid-command 2>&1)
 exit_code=$?
+set -e
 
 if assert_exit_code 2 $exit_code && \
    assert_contains "$output" "USAGE"; then
