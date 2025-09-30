@@ -186,8 +186,9 @@ namespace Fhir.Ig
                 _ => "???"
             };
 
+            var pid = Environment.ProcessId;
             var prefix = _context != null ? $"[{_context}] " : "";
-            Console.WriteLine($"{timestamp} {levelStr} {prefix}{message}");
+            Console.WriteLine($"{timestamp} {levelStr} [PID:{pid}] {prefix}{message}");
 
             if (ex != null)
                 Console.WriteLine($"  Exception: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
@@ -579,22 +580,31 @@ NOTES
         {
             var logger = new ConsoleLogger(cfg.LogLevel, "Agent");
 
-            // Singleton enforcement via lock pipe
-            NamedPipeServerStream? lockPipe = null;
+            // Singleton enforcement via exclusive file lock
+            var lockFile = Path.Combine(cfg.Root, ".agent.lock");
+            FileStream? lockStream = null;
             try
             {
-                lockPipe = new NamedPipeServerStream(
-                    cfg.LockPipeName,
-                    PipeDirection.InOut,
-                    maxNumberOfServerInstances: 1,
-                    PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous);
+                lockStream = new FileStream(
+                    lockFile,
+                    FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite,
+                    FileShare.None,  // Exclusive - only one process can hold this
+                    bufferSize: 1,
+                    FileOptions.DeleteOnClose);  // Auto-cleanup on exit
+
+                // Write PID for debugging
+                using (var writer = new StreamWriter(lockStream, leaveOpen: true))
+                {
+                    await writer.WriteLineAsync(Environment.ProcessId.ToString());
+                    await writer.FlushAsync();
+                }
 
                 logger.Log(LogLevel.Info, $"Agent started (root={cfg.Root}, pipe={cfg.ServicePipeName})");
             }
             catch (IOException ex)
             {
-                logger.Log(LogLevel.Warning, $"Agent already running for root {cfg.Root}", ex);
+                logger.Log(LogLevel.Debug, $"Agent already running for root {cfg.Root}: {ex.Message}");
                 return;
             }
 
@@ -638,8 +648,8 @@ NOTES
             }
             finally
             {
-                try { lockPipe?.Dispose(); }
-                catch (Exception ex) { logger.Log(LogLevel.Warning, "Error disposing lock pipe", ex); }
+                try { lockStream?.Dispose(); }
+                catch (Exception ex) { logger.Log(LogLevel.Warning, "Error disposing lock file", ex); }
             }
         }
 
