@@ -321,6 +321,11 @@ namespace Fhir.Ig
                 logger.Log(LogLevel.Debug, $"Connection failed: {ex.Message}");
                 return (false, null);
             }
+            catch (InvalidOperationException)
+            {
+                // Rethrow errors from agent (package not found, etc.)
+                throw;
+            }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Warning, "Unexpected error during connection", ex);
@@ -507,9 +512,17 @@ namespace Fhir.Ig
                     Console.WriteLine(JsonSerializer.Serialize(obj));
                 });
 
-                var path = await FhirIgClient.EnsureAsync(id!, ver!, opt, progress);
-                Console.WriteLine(JsonSerializer.Serialize(new { path }));
-                return 0;
+                try
+                {
+                    var path = await FhirIgClient.EnsureAsync(id!, ver!, opt, progress);
+                    Console.WriteLine(JsonSerializer.Serialize(new { path }));
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(JsonSerializer.Serialize(new { error = ex.Message }));
+                    return 1;
+                }
             }
             else if (cmd == "--agent")
             {
@@ -936,12 +949,22 @@ NOTES
                 {
                     return await ResolveTarballAsync(id, version, errors, ct);
                 }
-                catch (InvalidOperationException) when (attempt < _config.MaxRetries)
+                catch (HttpRequestException) when (attempt < _config.MaxRetries)
                 {
+                    // Retry on network errors
                     attempt++;
                     var delay = _config.RetryBaseDelay * Math.Pow(2, attempt - 1);
                     var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 200));
-                    _logger.Log(LogLevel.Warning, $"Resolution attempt {attempt} failed, retrying in {delay + jitter:c}");
+                    _logger.Log(LogLevel.Warning, $"Resolution attempt {attempt} failed (network error), retrying in {delay + jitter:c}");
+                    await Task.Delay(delay + jitter, ct);
+                }
+                catch (TaskCanceledException) when (attempt < _config.MaxRetries)
+                {
+                    // Retry on timeout
+                    attempt++;
+                    var delay = _config.RetryBaseDelay * Math.Pow(2, attempt - 1);
+                    var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 200));
+                    _logger.Log(LogLevel.Warning, $"Resolution attempt {attempt} failed (timeout), retrying in {delay + jitter:c}");
                     await Task.Delay(delay + jitter, ct);
                 }
             }
