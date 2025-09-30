@@ -1,4 +1,4 @@
-# fhir-agent
+# fhir-package-agent
 
 A high-performance FHIR Implementation Guide (IG) package manager with automatic background agent lifecycle management.
 
@@ -23,30 +23,30 @@ A high-performance FHIR Implementation Guide (IG) package manager with automatic
 ### Installation
 
 ```bash
-# Clone or download fhir-agent.cs
-git clone https://github.com/your-org/fhir-agent.git
-cd fhir-agent
+# Clone or download fhir-package-agent.cs
+git clone https://github.com/your-org/fhir-package-agent.git
+cd fhir-package-agent
 
 # Build
-dotnet publish fhir-agent.csproj -c Release -o bin
+dotnet publish fhir-package-agent.csproj -c Release -o bin
 ```
 
-This produces `bin/fhir-agent` (74 KB) ready to use.
+This produces `bin/fhir-package-agent` (74 KB) ready to use.
 
 ### CLI Usage
 
 ```bash
 # Download a FHIR package
-./bin/fhir-agent ensure hl7.fhir.us.core 6.1.0
+./bin/fhir-package-agent ensure hl7.fhir.us.core 6.1.0
 
 # With custom cache directory
-./bin/fhir-agent ensure hl7.fhir.r4.core 4.0.1 --root /custom/cache
+./bin/fhir-package-agent ensure hl7.fhir.r4.core 4.0.1 --root /custom/cache
 
 # With debug logging
-./bin/fhir-agent ensure hl7.fhir.r5.core 5.0.0 --log-level Debug
+./bin/fhir-package-agent ensure hl7.fhir.r5.core 5.0.0 --log-level Debug
 
 # Run agent explicitly (normally auto-started)
-./bin/fhir-agent --agent
+./bin/fhir-package-agent --agent
 ```
 
 ### Library Usage
@@ -99,7 +99,7 @@ var path = await FhirIgClient.EnsureAsync(
 All CLI output is JSON for easy parsing:
 
 ```bash
-$ ./bin/fhir-agent ensure hl7.fhir.us.core 6.1.0
+$ ./bin/fhir-package-agent ensure hl7.fhir.us.core 6.1.0
 {"phase":"start"}
 {"phase":"progress","message":"Downloading from https://packages.fhir.org"}
 {"phase":"progress","message":"Downloading 1.5 MiB"}
@@ -245,7 +245,7 @@ Each registry returns either:
 
 ## Known Issues
 
-- **dotnet run bug**: In .NET 10 RC, `dotnet run fhir-agent.cs -- args` doesn't pass arguments correctly. Workaround: compile first with `dotnet build`.
+- **dotnet run bug**: In .NET 10 RC, `dotnet run fhir-package-agent.cs -- args` doesn't pass arguments correctly. Workaround: compile first with `dotnet build`.
 
 ## Development
 
@@ -253,26 +253,26 @@ Each registry returns either:
 
 ```bash
 # Debug build
-dotnet build fhir-agent.csproj -o bin
+dotnet build fhir-package-agent.csproj -o bin
 
 # Release build (optimized)
-dotnet publish fhir-agent.csproj -c Release -o bin
+dotnet publish fhir-package-agent.csproj -c Release -o bin
 ```
 
 ### Testing
 
 ```bash
 # Basic functionality
-./bin/fhir-agent ensure hl7.fhir.us.core 6.1.0
+./bin/fhir-package-agent ensure hl7.fhir.us.core 6.1.0
 
 # Custom cache directory
-./bin/fhir-agent ensure hl7.fhir.r4.core 4.0.1 --root test-cache
+./bin/fhir-package-agent ensure hl7.fhir.r4.core 4.0.1 --root test-cache
 
 # Verify cache hit performance
-time ./bin/fhir-agent ensure hl7.fhir.us.core 6.1.0  # Should be ~40ms
+time ./bin/fhir-package-agent ensure hl7.fhir.us.core 6.1.0  # Should be ~40ms
 
 # Debug logging
-./bin/fhir-agent ensure hl7.fhir.r5.core 5.0.0 --log-level Debug
+./bin/fhir-package-agent ensure hl7.fhir.r5.core 5.0.0 --log-level Debug
 ```
 
 ### Library API

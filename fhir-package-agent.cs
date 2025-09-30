@@ -1,9 +1,9 @@
-// fhir-agent.cs
+// fhir-package-agent.cs
 // FHIR Implementation Guide Package Manager
 // Single-file library + CLI + agent with named pipes, atomic operations, and robust error handling.
 //
 // Library API:   Fhir.Ig.FhirIgClient.EnsureAsync(id, version, options?, progress?, ct)
-// CLI:           dotnet run fhir-agent.cs -- ensure <id> <version> [--root <path>] ...
+// CLI:           dotnet run fhir-package-agent.cs -- ensure <id> <version> [--root <path>] ...
 //                (Requires .NET 10+ to run .cs files directly without a project file)
 // Agent:         auto-starts on demand; one instance per root via lock pipe; idles out after timeout
 //
@@ -529,10 +529,10 @@ FHIR IG Package Manager - In-process agent with automatic lifecycle
 
 USAGE
   Ensure a package (auto-starts agent if needed):
-    fhir-agent ensure <id> <version> [options]
+    fhir-package-agent ensure <id> <version> [options]
 
   Run agent explicitly (runs until no active work):
-    fhir-agent --agent [options]
+    fhir-package-agent --agent [options]
 
 OPTIONS
   --root <path>            Cache root directory (default: ~/.fhir)
@@ -546,9 +546,9 @@ OPTIONS
   --log-level <level>      Log level: Debug, Info, Warning, Error (default: Info)
 
 EXAMPLES
-  fhir-agent ensure hl7.fhir.us.core 6.1.0
-  fhir-agent ensure hl7.fhir.r4.core 4.0.1 --log-level Debug
-  fhir-agent --agent --max 10
+  fhir-package-agent ensure hl7.fhir.us.core 6.1.0
+  fhir-package-agent ensure hl7.fhir.r4.core 4.0.1 --log-level Debug
+  fhir-package-agent --agent --max 10
 
 NOTES
   - Agent runs in-process and exits when no active requests or downloads

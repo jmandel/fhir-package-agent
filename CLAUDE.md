@@ -16,29 +16,29 @@ The agent auto-starts on demand within the calling process, and multiple process
 ### Building
 ```bash
 # Release build (optimized, smaller binary)
-dotnet publish fhir-agent.csproj -c Release -o bin
+dotnet publish fhir-package-agent.csproj -c Release -o bin
 
 # Debug build
-dotnet build fhir-agent.csproj -o bin
+dotnet build fhir-package-agent.csproj -o bin
 ```
 
-This produces `bin/fhir-agent` (74 KB) along with supporting files.
+This produces `bin/fhir-package-agent` (74 KB) along with supporting files.
 
-**Note**: `dotnet run fhir-agent.cs` has a known bug in .NET 10 RC where arguments aren't passed through. This will be fixed in the final .NET 10 release. For now, compile first with `dotnet build` or `dotnet publish`.
+**Note**: `dotnet run fhir-package-agent.cs` has a known bug in .NET 10 RC where arguments aren't passed through. This will be fixed in the final .NET 10 release. For now, compile first with `dotnet build` or `dotnet publish`.
 
 ### Running as CLI
 ```bash
 # Ensure a package is cached (auto-starts agent if needed)
-./bin/fhir-agent ensure <package-id> <version> [options]
+./bin/fhir-package-agent ensure <package-id> <version> [options]
 
 # Example: Download FHIR US Core IG
-./bin/fhir-agent ensure hl7.fhir.us.core 6.1.0
+./bin/fhir-package-agent ensure hl7.fhir.us.core 6.1.0
 
 # Run with debug logging
-./bin/fhir-agent ensure hl7.fhir.r4.core 4.0.1 --log-level Debug
+./bin/fhir-package-agent ensure hl7.fhir.r4.core 4.0.1 --log-level Debug
 
 # Run agent explicitly (exits when no active work)
-./bin/fhir-agent --agent [options]
+./bin/fhir-package-agent --agent [options]
 ```
 
 ### CLI Options
