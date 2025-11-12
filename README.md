@@ -80,6 +80,29 @@ var path = await FhirIgClient.EnsureAsync(
 );
 ```
 
+## Examples
+
+### Agent2Agent (A2A) Integration
+
+The `examples/a2a/` directory contains a complete implementation of an A2A-compliant agent that exposes FHIR package management functionality through the [Agent2Agent Protocol](https://github.com/a2aproject/a2a-js).
+
+This enables:
+- Multi-agent systems where FHIR package management is handled by a specialized agent
+- Other A2A agents to request FHIR packages programmatically
+- Integration with agentic applications following the A2A protocol
+
+See [`examples/a2a/README.md`](examples/a2a/README.md) for full documentation and usage examples.
+
+Quick start:
+```bash
+cd examples/a2a
+npm install
+npm run server  # Start A2A agent server
+
+# In another terminal
+npm run client  # Run example client
+```
+
 ## CLI Options
 
 | Option | Description | Default |

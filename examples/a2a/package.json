@@ -1,0 +1,28 @@
+{
+  "name": "fhir-package-a2a-agent",
+  "version": "1.0.0",
+  "description": "A2A Agent wrapper for FHIR Package Agent",
+  "type": "module",
+  "main": "agent.js",
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js",
+    "build:fhir-agent": "cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "fhir",
+    "a2a",
+    "agent",
+    "healthcare"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@a2a-js/sdk": "^0.1.0",
+    "express": "^4.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
