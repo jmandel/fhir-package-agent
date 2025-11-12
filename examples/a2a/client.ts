@@ -9,7 +9,32 @@ import { A2AClient } from '@a2a-js/sdk';
 
 const AGENT_URL = process.env.AGENT_URL || 'http://localhost:3000';
 
-async function main() {
+interface MessagePart {
+  type: string;
+  text?: string;
+}
+
+interface Message {
+  role: string;
+  parts?: MessagePart[];
+}
+
+interface Task {
+  id?: string;
+  status?: string;
+  artifacts?: Array<{
+    name: string;
+    type: string;
+    data: unknown;
+  }>;
+}
+
+interface A2AResponse {
+  message?: Message;
+  task?: Task;
+}
+
+async function main(): Promise<void> {
   console.log('🔍 Connecting to FHIR Package A2A Agent...\n');
 
   try {
@@ -18,7 +43,7 @@ async function main() {
 
     console.log('✓ Connected to agent:', client.agentCard.name);
     console.log('  Description:', client.agentCard.description);
-    console.log('  Available skills:', client.agentCard.skills.map(s => s.name).join(', '));
+    console.log('  Available skills:', client.agentCard.skills.map((s: { name: string }) => s.name).join(', '));
     console.log();
 
     // Example 1: List cached packages
@@ -32,7 +57,7 @@ async function main() {
         type: 'text',
         text: 'list cached packages'
       }]
-    });
+    }) as A2AResponse;
 
     console.log('Response:', extractTextFromResponse(listResponse));
     console.log();
@@ -48,7 +73,7 @@ async function main() {
         type: 'text',
         text: 'ensure package: hl7.fhir.r4.core version: 4.0.1'
       }]
-    });
+    }) as A2AResponse;
 
     console.log('Response:', extractTextFromResponse(ensureResponse));
     console.log();
@@ -74,7 +99,7 @@ async function main() {
         type: 'text',
         text: 'get package info for package: hl7.fhir.r4.core version: 4.0.1'
       }]
-    });
+    }) as A2AResponse;
 
     console.log('Response:', extractTextFromResponse(infoResponse));
     console.log();
@@ -90,7 +115,7 @@ async function main() {
         type: 'text',
         text: 'ensure package: hl7.fhir.us.core version: 6.1.0'
       }]
-    });
+    }) as A2AResponse;
 
     console.log('Response:', extractTextFromResponse(usCoreResponse));
     console.log();
@@ -98,7 +123,8 @@ async function main() {
     console.log('✅ All examples completed successfully!\n');
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Error:', errorMessage);
     console.error(error);
     process.exit(1);
   }
@@ -107,7 +133,7 @@ async function main() {
 /**
  * Helper function to extract text from A2A response
  */
-function extractTextFromResponse(response) {
+function extractTextFromResponse(response: A2AResponse): string {
   if (response.message) {
     const textParts = response.message.parts?.filter(p => p.type === 'text') || [];
     return textParts.map(p => p.text).join('\n');
@@ -116,7 +142,7 @@ function extractTextFromResponse(response) {
 }
 
 // Run the main function
-main().catch((error) => {
+main().catch((error: Error) => {
   console.error('Fatal error:', error);
   process.exit(1);
 });

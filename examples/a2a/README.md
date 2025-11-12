@@ -2,6 +2,8 @@
 
 This example demonstrates how to integrate the [FHIR Package Agent](../../) with the [Agent2Agent (A2A) Protocol](https://github.com/a2aproject/a2a-js) to create an A2A-compliant agent for managing FHIR Implementation Guide packages.
 
+Built with **TypeScript** and **ArkType** for compile-time and runtime type safety.
+
 ## Overview
 
 The FHIR Package A2A Agent exposes the FHIR Package Agent's functionality through the A2A protocol, allowing other A2A agents and clients to:
@@ -38,7 +40,15 @@ This enables multi-agent systems where FHIR package management is handled by a s
 ## Prerequisites
 
 1. **.NET 8+** - Required to build the FHIR Package Agent
-2. **Bun 1.3+** - Required for the A2A agent (fast JavaScript runtime, compatible with .NET v10)
+2. **Bun 1.3+** - Required for the A2A agent (fast JavaScript/TypeScript runtime, compatible with .NET v10)
+
+## Features
+
+- **TypeScript** - Full type safety at compile time
+- **ArkType** - Runtime type validation for robust error handling
+- **Bun** - Fast JavaScript runtime with native TypeScript support
+- **Express.js** - Battle-tested HTTP server
+- **A2A Protocol** - Standardized agent communication
 
 ## Setup
 
@@ -61,15 +71,23 @@ This creates the `bin/fhir-package-agent` executable.
 bun install
 ```
 
+This installs:
+- `@a2a-js/sdk` - A2A protocol implementation
+- `arktype` - Runtime type validation
+- `express` - HTTP server framework
+- TypeScript types for Node.js and Express
+
 ## Usage
 
 ### Starting the Server
 
-Start the A2A agent server:
+Start the A2A agent server (Bun runs TypeScript natively):
 
 ```bash
 bun run server
 ```
+
+No compilation step needed - Bun executes TypeScript directly!
 
 This will start the server on `http://localhost:3000` (configurable via `PORT` and `HOST` environment variables).
 
@@ -204,9 +222,9 @@ Retrieves detailed information about a cached package.
 
 ## Configuration
 
-You can customize the agent's behavior through environment variables or by modifying the `FhirPackageAgent` constructor in `server.js`:
+You can customize the agent's behavior through environment variables or by modifying the `FhirPackageAgent` constructor in `server.ts`:
 
-```javascript
+```typescript
 const fhirAgent = new FhirPackageAgent({
   // Path to the FHIR agent executable
   fhirAgentPath: '/path/to/fhir-package-agent',
@@ -215,9 +233,11 @@ const fhirAgent = new FhirPackageAgent({
   cacheRoot: '/custom/cache/path',
 
   // Log level: Debug, Info, Warning, Error (default: Info)
-  logLevel: 'Debug'
+  logLevel: 'Debug' // Type-safe: only accepts valid log levels
 });
 ```
+
+Options are validated at runtime using ArkType, ensuring type safety even when loading from environment variables or config files.
 
 ### Environment Variables
 
@@ -229,14 +249,14 @@ const fhirAgent = new FhirPackageAgent({
 
 The FHIR Package A2A Agent can be integrated into multi-agent systems. Here's an example of how another agent might use it:
 
-```javascript
+```typescript
 import { A2AClient } from '@a2a-js/sdk';
 
 async function myAgent() {
   // Connect to the FHIR Package Agent
   const fhirAgent = await A2AClient.fromCardUrl('http://localhost:3000/card');
 
-  // Request a package
+  // Request a package (fully typed)
   const response = await fhirAgent.sendMessage({
     role: 'user',
     parts: [{
@@ -245,7 +265,7 @@ async function myAgent() {
     }]
   });
 
-  // Use the package path from the response
+  // TypeScript knows the structure of the response
   const packagePath = response.task?.artifacts?.[0]?.data?.path;
 
   // Now you can read FHIR resources from the package
@@ -265,11 +285,39 @@ async function myAgent() {
 
 ## Files
 
-- `agent.js` - Core FHIR Package A2A Agent implementation
-- `server.js` - Express.js server that exposes the agent
-- `client.js` - Example client demonstrating agent usage
+- `agent.ts` - Core FHIR Package A2A Agent implementation (TypeScript + ArkType)
+- `server.ts` - Express.js server that exposes the agent
+- `client.ts` - Example client demonstrating agent usage
 - `package.json` - Bun project configuration
+- `tsconfig.json` - TypeScript configuration
+- `.gitignore` - Git ignore patterns
 - `README.md` - This file
+
+## TypeScript and ArkType
+
+This project uses **TypeScript** for compile-time type safety and **ArkType** for runtime validation:
+
+### Compile-Time Safety (TypeScript)
+```typescript
+// TypeScript catches errors at development time
+const agent = new FhirPackageAgent({
+  logLevel: 'Invalid' // ❌ TypeScript error: not a valid log level
+});
+```
+
+### Runtime Safety (ArkType)
+```typescript
+// ArkType validates data at runtime (e.g., from config files)
+const options = loadFromConfig(); // unknown data
+const agent = new FhirPackageAgent(options); // ✓ Validated by ArkType
+```
+
+### Type Checking
+
+Run TypeScript type checker:
+```bash
+bun run typecheck
+```
 
 ## Troubleshooting
 

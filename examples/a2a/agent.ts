@@ -1,10 +1,108 @@
-import { spawn } from 'child_process';
+import { type } from 'arktype';
+import { spawn, type ChildProcess } from 'child_process';
 import { readdir, readFile } from 'fs/promises';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// ArkType schemas for runtime validation
+const FhirPackageOptionsSchema = type({
+  'fhirAgentPath?': 'string',
+  'cacheRoot?': 'string',
+  'logLevel?': '"Debug" | "Info" | "Warning" | "Error"'
+});
+
+const SkillParamsSchema = type({
+  'packageId?': 'string',
+  'version?': 'string'
+});
+
+const MessagePartSchema = type({
+  type: 'string',
+  'text?': 'string'
+});
+
+const RequestMessageSchema = type({
+  'role?': 'string',
+  'parts?': MessagePartSchema.array()
+});
+
+// TypeScript interfaces (compile-time)
+export interface FhirPackageOptions {
+  fhirAgentPath?: string;
+  cacheRoot?: string;
+  logLevel?: 'Debug' | 'Info' | 'Warning' | 'Error';
+}
+
+export interface AgentCard {
+  name: string;
+  description: string;
+  version: string;
+  skills: Skill[];
+  author: string;
+  homepage: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  parameters: SkillParameter[];
+}
+
+export interface SkillParameter {
+  name: string;
+  type: string;
+  description: string;
+  required: boolean;
+}
+
+export interface MessagePart {
+  type: string;
+  text?: string;
+}
+
+export interface Message {
+  role: string;
+  parts?: MessagePart[];
+}
+
+export interface RequestContext {
+  request: {
+    messages?: Message[];
+  };
+}
+
+export interface EventBus {
+  publishMessage(message: Message): void;
+  publishArtifact(artifact: Artifact): void;
+}
+
+export interface Artifact {
+  name: string;
+  type: string;
+  data: unknown;
+}
+
+interface SkillInfo {
+  name: string;
+  params: Record<string, string>;
+}
+
+interface FhirAgentResult {
+  success: boolean;
+  output: string;
+  error?: string;
+  path?: string | null;
+  exitCode?: number;
+}
+
+interface PackageInfo {
+  id: string;
+  version: string;
+  path: string;
+}
 
 /**
  * FHIR Package A2A Agent
@@ -13,7 +111,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * access to FHIR package management functionality.
  */
 export class FhirPackageAgent {
-  constructor(options = {}) {
+  private readonly fhirAgentPath: string;
+  private readonly cacheRoot: string;
+  private readonly logLevel: string;
+
+  constructor(options: FhirPackageOptions = {}) {
+    // Validate options at runtime with ArkType
+    const validatedOptions = FhirPackageOptionsSchema(options);
+    if (validatedOptions instanceof type.errors) {
+      throw new Error(`Invalid options: ${validatedOptions.summary}`);
+    }
+
     this.fhirAgentPath = options.fhirAgentPath || resolve(__dirname, '../../bin/fhir-package-agent');
     this.cacheRoot = options.cacheRoot || join(os.homedir(), '.fhir');
     this.logLevel = options.logLevel || 'Info';
@@ -22,7 +130,7 @@ export class FhirPackageAgent {
   /**
    * Get the agent card that defines this agent's capabilities
    */
-  getAgentCard() {
+  getAgentCard(): AgentCard {
     return {
       name: 'FHIR Package Agent',
       description: 'An A2A agent for managing FHIR Implementation Guide packages. Downloads, caches, and provides access to FHIR IG packages from official registries.',
@@ -77,10 +185,8 @@ export class FhirPackageAgent {
 
   /**
    * Execute agent logic based on the incoming request
-   * @param {Object} context - The request context from A2A
-   * @param {Object} eventBus - Event bus for publishing responses
    */
-  async execute(context, eventBus) {
+  async execute(context: RequestContext, eventBus: EventBus): Promise<void> {
     const { request } = context;
 
     // Extract the skill being invoked
@@ -118,11 +224,12 @@ export class FhirPackageAgent {
           });
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       eventBus.publishMessage({
         role: 'agent',
         parts: [{
           type: 'text',
-          text: `Error: ${error.message}`
+          text: `Error: ${errorMessage}`
         }]
       });
     }
@@ -131,7 +238,7 @@ export class FhirPackageAgent {
   /**
    * Extract skill name and parameters from request
    */
-  extractSkill(request) {
+  private extractSkill(request: RequestContext['request']): SkillInfo | null {
     // Try to parse from user message
     const userMessage = request.messages?.[request.messages.length - 1];
     if (!userMessage) return null;
@@ -147,8 +254,8 @@ export class FhirPackageAgent {
         return {
           name: 'ensure-package',
           params: {
-            packageId: packageIdMatch[1],
-            version: versionMatch[1]
+            packageId: packageIdMatch[1]!,
+            version: versionMatch[1]!
           }
         };
       }
@@ -166,8 +273,8 @@ export class FhirPackageAgent {
         return {
           name: 'get-package-info',
           params: {
-            packageId: packageIdMatch[1],
-            version: versionMatch[1]
+            packageId: packageIdMatch[1]!,
+            version: versionMatch[1]!
           }
         };
       }
@@ -179,7 +286,7 @@ export class FhirPackageAgent {
   /**
    * Handle the ensure-package skill
    */
-  async handleEnsurePackage(params, eventBus) {
+  private async handleEnsurePackage(params: Record<string, string>, eventBus: EventBus): Promise<void> {
     const { packageId, version } = params;
 
     if (!packageId || !version) {
@@ -227,16 +334,16 @@ export class FhirPackageAgent {
   /**
    * Handle the list-cached skill
    */
-  async handleListCached(eventBus) {
+  private async handleListCached(eventBus: EventBus): Promise<void> {
     const packagesDir = join(this.cacheRoot, 'packages');
 
     try {
       const entries = await readdir(packagesDir);
-      const packages = entries
+      const packages: PackageInfo[] = entries
         .filter(entry => entry.includes('#') && !entry.includes('.tmp'))
         .map(entry => {
           const [id, version] = entry.split('#');
-          return { id, version, path: join(packagesDir, entry) };
+          return { id: id!, version: version!, path: join(packagesDir, entry) };
         });
 
       if (packages.length === 0) {
@@ -263,8 +370,8 @@ export class FhirPackageAgent {
           data: packages
         });
       }
-    } catch (error) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
         eventBus.publishMessage({
           role: 'agent',
           parts: [{
@@ -281,7 +388,7 @@ export class FhirPackageAgent {
   /**
    * Handle the get-package-info skill
    */
-  async handleGetPackageInfo(params, eventBus) {
+  private async handleGetPackageInfo(params: Record<string, string>, eventBus: EventBus): Promise<void> {
     const { packageId, version } = params;
 
     if (!packageId || !version) {
@@ -292,16 +399,17 @@ export class FhirPackageAgent {
     const packageJsonPath = join(packagePath, 'package', 'package.json');
 
     try {
-      const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
+      const packageJsonContent = await readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(packageJsonContent) as Record<string, unknown>;
 
       const info = {
         id: packageId,
         version: version,
         path: packagePath,
-        name: packageJson.name,
-        description: packageJson.description,
+        name: packageJson.name as string,
+        description: packageJson.description as string,
         dependencies: packageJson.dependencies || {},
-        fhirVersions: packageJson['fhir-version-list'] || packageJson.fhirVersions || []
+        fhirVersions: (packageJson['fhir-version-list'] || packageJson.fhirVersions || []) as string[]
       };
 
       eventBus.publishMessage({
@@ -317,8 +425,8 @@ export class FhirPackageAgent {
         type: 'package-info',
         data: info
       });
-    } catch (error) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
         throw new Error(`Package ${packageId}@${version} is not cached. Run ensure-package first.`);
       } else {
         throw error;
@@ -329,7 +437,7 @@ export class FhirPackageAgent {
   /**
    * Run the FHIR package agent CLI
    */
-  async runFhirAgent(args) {
+  private async runFhirAgent(args: string[]): Promise<FhirAgentResult> {
     return new Promise((resolve) => {
       const fullArgs = [
         ...args,
@@ -337,13 +445,13 @@ export class FhirPackageAgent {
         '--log-level', this.logLevel
       ];
 
-      const child = spawn(this.fhirAgentPath, fullArgs);
+      const child: ChildProcess = spawn(this.fhirAgentPath, fullArgs);
 
       let stdout = '';
       let stderr = '';
-      let path = null;
+      let path: string | null = null;
 
-      child.stdout.on('data', (data) => {
+      child.stdout?.on('data', (data: Buffer) => {
         const output = data.toString();
         stdout += output;
 
@@ -352,7 +460,7 @@ export class FhirPackageAgent {
         for (const line of lines) {
           if (line.trim()) {
             try {
-              const json = JSON.parse(line);
+              const json = JSON.parse(line) as { path?: string };
               if (json.path) {
                 path = json.path;
               }
@@ -363,21 +471,21 @@ export class FhirPackageAgent {
         }
       });
 
-      child.stderr.on('data', (data) => {
+      child.stderr?.on('data', (data: Buffer) => {
         stderr += data.toString();
       });
 
-      child.on('close', (code) => {
+      child.on('close', (code: number | null) => {
         resolve({
           success: code === 0,
           output: stdout,
           error: stderr,
           path: path,
-          exitCode: code
+          exitCode: code ?? undefined
         });
       });
 
-      child.on('error', (error) => {
+      child.on('error', (error: Error) => {
         resolve({
           success: false,
           output: stdout,

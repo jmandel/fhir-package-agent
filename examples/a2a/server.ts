@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import { A2AExpressApp } from '@a2a-js/sdk';
 import { FhirPackageAgent } from './agent.js';
+import type { RequestContext, EventBus } from './agent.js';
 
 /**
  * FHIR Package A2A Server
@@ -9,10 +10,16 @@ import { FhirPackageAgent } from './agent.js';
  * that can be accessed by other A2A clients and agents.
  */
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || 'localhost';
 
-async function startServer() {
+interface HealthResponse {
+  status: string;
+  agent: string;
+  version: string;
+}
+
+async function startServer(): Promise<void> {
   // Create the FHIR Package Agent instance
   const fhirAgent = new FhirPackageAgent({
     // You can customize these options:
@@ -27,7 +34,7 @@ async function startServer() {
   // Create A2A Express app with the agent
   const a2aApp = new A2AExpressApp({
     agentCard: fhirAgent.getAgentCard(),
-    executor: async (context, eventBus) => {
+    executor: async (context: RequestContext, eventBus: EventBus) => {
       await fhirAgent.execute(context, eventBus);
     }
   });
@@ -36,7 +43,7 @@ async function startServer() {
   app.use('/', a2aApp.router);
 
   // Add a simple health check endpoint
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req: Request, res: Response<HealthResponse>) => {
     res.json({
       status: 'ok',
       agent: 'FHIR Package Agent',
@@ -46,15 +53,18 @@ async function startServer() {
 
   // Start the server
   app.listen(PORT, HOST, () => {
+    const paddedHost = HOST.padEnd(20);
+    const portStr = PORT.toString();
+
     console.log(`
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
 ║   🏥 FHIR Package A2A Agent Server                           ║
 ║                                                                ║
-║   Server running at: http://${HOST}:${PORT}                    ║
+║   Server running at: http://${paddedHost}:${portStr}${' '.repeat(20 - portStr.length)}║
 ║                                                                ║
-║   Agent Card:  http://${HOST}:${PORT}/card                     ║
-║   Health:      http://${HOST}:${PORT}/health                   ║
+║   Agent Card:  http://${paddedHost}:${portStr}/card${' '.repeat(15 - portStr.length)}║
+║   Health:      http://${paddedHost}:${portStr}/health${' '.repeat(13 - portStr.length)}║
 ║                                                                ║
 ║   Skills:                                                      ║
 ║   - ensure-package: Download and cache FHIR packages          ║
@@ -67,18 +77,18 @@ async function startServer() {
 }
 
 // Handle errors
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', (error: Error) => {
   console.error('Unhandled rejection:', error);
   process.exit(1);
 });
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', (error: Error) => {
   console.error('Uncaught exception:', error);
   process.exit(1);
 });
 
 // Start the server
-startServer().catch((error) => {
+startServer().catch((error: Error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
