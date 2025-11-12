@@ -1,9 +1,9 @@
 {
-  "name": "fhir-package-a2a-agent",
+  "name": "fhir-package-mastra-agent",
   "version": "1.0.0",
-  "description": "A2A Agent wrapper for FHIR Package Agent with TypeScript and ArkType",
+  "description": "FHIR Package Agent powered by Mastra AI with TypeScript and ArkType",
   "type": "module",
-  "main": "agent.ts",
+  "main": "mastra.ts",
   "scripts": {
     "server": "bun run server.ts",
     "client": "bun run client.ts",
@@ -12,18 +12,20 @@
   },
   "keywords": [
     "fhir",
-    "a2a",
+    "mastra",
     "agent",
     "healthcare",
     "bun",
     "typescript",
-    "arktype"
+    "arktype",
+    "ai"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@a2a-js/sdk": "^0.1.0",
-    "arktype": "^2.0.0-rc.13"
+    "@mastra/core": "^0.1.0",
+    "arktype": "^2.0.0-rc.13",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.0"

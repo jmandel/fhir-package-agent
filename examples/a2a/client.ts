@@ -1,49 +1,45 @@
-import { A2AClient } from '@a2a-js/sdk';
-
 /**
- * FHIR Package A2A Client Example
+ * FHIR Package Mastra Agent Client Example
  *
- * This demonstrates how to interact with the FHIR Package A2A Agent
- * using the A2A protocol.
+ * This demonstrates how to interact with the FHIR Package Mastra Agent
+ * using HTTP requests to chat with the AI agent.
  */
 
 const AGENT_URL = process.env.AGENT_URL || 'http://localhost:3000';
 
-interface MessagePart {
-  type: string;
-  text?: string;
+interface ChatResponse {
+  response: string;
+  success: boolean;
+  error?: string;
 }
 
-interface Message {
-  role: string;
-  parts?: MessagePart[];
-}
+async function chat(message: string): Promise<string> {
+  const response = await fetch(`${AGENT_URL}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  });
 
-interface Task {
-  id?: string;
-  status?: string;
-  artifacts?: Array<{
-    name: string;
-    type: string;
-    data: unknown;
-  }>;
-}
+  const data = await response.json() as ChatResponse;
 
-interface A2AResponse {
-  message?: Message;
-  task?: Task;
+  if (!data.success) {
+    throw new Error(data.error || 'Chat request failed');
+  }
+
+  return data.response;
 }
 
 async function main(): Promise<void> {
-  console.log('🔍 Connecting to FHIR Package A2A Agent...\n');
+  console.log('🤖 Connecting to FHIR Package Mastra Agent...\n');
 
   try {
-    // Connect to the agent using its card URL
-    const client = await A2AClient.fromCardUrl(`${AGENT_URL}/card`);
-
-    console.log('✓ Connected to agent:', client.agentCard.name);
-    console.log('  Description:', client.agentCard.description);
-    console.log('  Available skills:', client.agentCard.skills.map((s: { name: string }) => s.name).join(', '));
+    // Check health
+    const healthResponse = await fetch(`${AGENT_URL}/health`);
+    const health = await healthResponse.json();
+    console.log('✓ Connected to:', health.agent);
+    console.log('  Framework:', health.framework);
     console.log();
 
     // Example 1: List cached packages
@@ -51,73 +47,44 @@ async function main(): Promise<void> {
     console.log('Example 1: List cached packages');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    const listResponse = await client.sendMessage({
-      role: 'user',
-      parts: [{
-        type: 'text',
-        text: 'list cached packages'
-      }]
-    }) as A2AResponse;
-
-    console.log('Response:', extractTextFromResponse(listResponse));
+    const listResponse = await chat('What FHIR packages do I have cached?');
+    console.log('Agent:', listResponse);
     console.log();
 
-    // Example 2: Ensure a FHIR package
+    // Example 2: Download a FHIR package
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Example 2: Ensure FHIR package (hl7.fhir.r4.core)');
+    console.log('Example 2: Download FHIR R4 Core package');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    const ensureResponse = await client.sendMessage({
-      role: 'user',
-      parts: [{
-        type: 'text',
-        text: 'ensure package: hl7.fhir.r4.core version: 4.0.1'
-      }]
-    }) as A2AResponse;
-
-    console.log('Response:', extractTextFromResponse(ensureResponse));
+    const downloadResponse = await chat('Please download hl7.fhir.r4.core version 4.0.1');
+    console.log('Agent:', downloadResponse);
     console.log();
 
-    // If the response is a task, we can monitor its progress
-    if (ensureResponse.task) {
-      console.log('Task created:', ensureResponse.task.id);
-      console.log('Task status:', ensureResponse.task.status);
-
-      if (ensureResponse.task.artifacts) {
-        console.log('Artifacts:', ensureResponse.task.artifacts);
-      }
-    }
-
-    // Example 3: Get package info
+    // Example 3: Get package information
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Example 3: Get package info');
+    console.log('Example 3: Get package information');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    const infoResponse = await client.sendMessage({
-      role: 'user',
-      parts: [{
-        type: 'text',
-        text: 'get package info for package: hl7.fhir.r4.core version: 4.0.1'
-      }]
-    }) as A2AResponse;
-
-    console.log('Response:', extractTextFromResponse(infoResponse));
+    const infoResponse = await chat('Tell me about the hl7.fhir.r4.core package version 4.0.1');
+    console.log('Agent:', infoResponse);
     console.log();
 
-    // Example 4: Ensure US Core package
+    // Example 4: Download US Core
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Example 4: Ensure US Core package');
+    console.log('Example 4: Download US Core package');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    const usCoreResponse = await client.sendMessage({
-      role: 'user',
-      parts: [{
-        type: 'text',
-        text: 'ensure package: hl7.fhir.us.core version: 6.1.0'
-      }]
-    }) as A2AResponse;
+    const usCoreResponse = await chat('Can you get me the US Core 6.1.0 package?');
+    console.log('Agent:', usCoreResponse);
+    console.log();
 
-    console.log('Response:', extractTextFromResponse(usCoreResponse));
+    // Example 5: Natural language conversation
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Example 5: Natural language query');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    const nlResponse = await chat('How many packages do I have now?');
+    console.log('Agent:', nlResponse);
     console.log();
 
     console.log('✅ All examples completed successfully!\n');
@@ -128,17 +95,6 @@ async function main(): Promise<void> {
     console.error(error);
     process.exit(1);
   }
-}
-
-/**
- * Helper function to extract text from A2A response
- */
-function extractTextFromResponse(response: A2AResponse): string {
-  if (response.message) {
-    const textParts = response.message.parts?.filter(p => p.type === 'text') || [];
-    return textParts.map(p => p.text).join('\n');
-  }
-  return 'No text response';
 }
 
 // Run the main function

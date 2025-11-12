@@ -1,10 +1,9 @@
-import { FhirPackageAgent } from './agent.js';
-import type { RequestContext, EventBus } from './agent.js';
+import { mastra } from './mastra.js';
 
 /**
- * FHIR Package A2A Server
+ * FHIR Package Mastra Agent Server
  *
- * This server exposes the FHIR Package Agent as an A2A-compliant agent
+ * This server exposes the FHIR Package Agent powered by Mastra AI
  * using Bun's native high-performance HTTP server.
  */
 
@@ -15,36 +14,16 @@ interface HealthResponse {
   status: string;
   agent: string;
   version: string;
+  framework: string;
 }
 
-// Create the FHIR Package Agent instance
-const fhirAgent = new FhirPackageAgent({
-  // You can customize these options:
-  // fhirAgentPath: '/path/to/fhir-package-agent',
-  // cacheRoot: '/custom/cache/path',
-  // logLevel: 'Debug'
-});
+interface ChatRequest {
+  message: string;
+}
 
-// Mock EventBus for A2A protocol
-class SimpleEventBus implements EventBus {
-  private messages: Array<{ role: string; parts: Array<{ type: string; text?: string }> }> = [];
-  private artifacts: Array<{ name: string; type: string; data: unknown }> = [];
-
-  publishMessage(message: { role: string; parts: Array<{ type: string; text?: string }> }): void {
-    this.messages.push(message);
-  }
-
-  publishArtifact(artifact: { name: string; type: string; data: unknown }): void {
-    this.artifacts.push(artifact);
-  }
-
-  getMessages() {
-    return this.messages;
-  }
-
-  getArtifacts() {
-    return this.artifacts;
-  }
+interface ChatResponse {
+  response: string;
+  success: boolean;
 }
 
 // Start Bun's native server
@@ -67,49 +46,44 @@ const server = Bun.serve({
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Route: GET /card - Agent card
-    if (url.pathname === '/card' && req.method === 'GET') {
-      return Response.json(fhirAgent.getAgentCard(), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     // Route: GET /health - Health check
     if (url.pathname === '/health' && req.method === 'GET') {
       const health: HealthResponse = {
         status: 'ok',
         agent: 'FHIR Package Agent',
-        version: '1.0.0'
+        version: '1.0.0',
+        framework: 'Mastra AI',
       };
       return Response.json(health, {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Route: POST /message - Send message to agent
-    if (url.pathname === '/message' && req.method === 'POST') {
+    // Route: POST /chat - Chat with the agent
+    if (url.pathname === '/chat' && req.method === 'POST') {
       try {
-        const body = await req.json() as { messages?: Array<{ role: string; parts?: Array<{ type: string; text?: string }> }> };
+        const body = await req.json() as ChatRequest;
+        const message = body.message;
 
-        const context: RequestContext = {
-          request: {
-            messages: body.messages || []
-          }
-        };
+        if (!message) {
+          return Response.json(
+            { error: 'Message is required', success: false },
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
 
-        const eventBus = new SimpleEventBus();
-        await fhirAgent.execute(context, eventBus);
+        // Get the agent
+        const agent = mastra.getAgent('fhirPackageAgent');
 
-        const messages = eventBus.getMessages();
-        const artifacts = eventBus.getArtifacts();
+        // Generate response
+        const result = await agent.generate(message);
 
-        const response = {
-          message: messages.length > 0 ? messages[messages.length - 1] : null,
-          task: artifacts.length > 0 ? {
-            id: `task-${Date.now()}`,
-            status: 'completed',
-            artifacts: artifacts
-          } : null
+        const response: ChatResponse = {
+          response: result.text,
+          success: true,
         };
 
         return Response.json(response, {
@@ -118,7 +92,7 @@ const server = Bun.serve({
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return Response.json(
-          { error: errorMessage },
+          { error: errorMessage, success: false },
           {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -127,10 +101,23 @@ const server = Bun.serve({
       }
     }
 
+    // Route: GET /agent - Get agent information
+    if (url.pathname === '/agent' && req.method === 'GET') {
+      const agent = mastra.getAgent('fhirPackageAgent');
+
+      return Response.json({
+        name: agent.name,
+        instructions: agent.instructions,
+        tools: Object.keys(agent.tools || {}),
+      }, {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Route: GET / - Welcome message
     if (url.pathname === '/' && req.method === 'GET') {
       return new Response(
-        `FHIR Package A2A Agent\n\nEndpoints:\n- GET /card - Agent card\n- GET /health - Health check\n- POST /message - Send message`,
+        `FHIR Package Mastra Agent\n\nEndpoints:\n- GET /health - Health check\n- POST /chat - Chat with agent\n- GET /agent - Agent info\n\nPowered by Mastra AI`,
         {
           headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
         }
@@ -157,20 +144,20 @@ const portStr = PORT.toString();
 console.log(`
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
-║   🏥 FHIR Package A2A Agent Server (Bun Native)              ║
+║   🏥 FHIR Package Mastra Agent Server                        ║
 ║                                                                ║
 ║   Server running at: http://${paddedHost}:${portStr}${' '.repeat(20 - portStr.length)}║
 ║                                                                ║
-║   Agent Card:  http://${paddedHost}:${portStr}/card${' '.repeat(15 - portStr.length)}║
 ║   Health:      http://${paddedHost}:${portStr}/health${' '.repeat(13 - portStr.length)}║
-║   Message:     http://${paddedHost}:${portStr}/message${' '.repeat(11 - portStr.length)}║
+║   Chat:        http://${paddedHost}:${portStr}/chat${' '.repeat(15 - portStr.length)}║
+║   Agent Info:  http://${paddedHost}:${portStr}/agent${' '.repeat(14 - portStr.length)}║
 ║                                                                ║
-║   Skills:                                                      ║
-║   - ensure-package: Download and cache FHIR packages          ║
-║   - list-cached: List all cached packages                     ║
-║   - get-package-info: Get package metadata                    ║
+║   Tools:                                                       ║
+║   - ensure-fhir-package: Download and cache FHIR packages     ║
+║   - list-cached-fhir-packages: List all cached packages       ║
+║   - get-fhir-package-info: Get package metadata               ║
 ║                                                                ║
-║   Using Bun's native HTTP server for maximum performance! 🚀 ║
+║   Powered by Mastra AI + Bun 🚀                               ║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 `);

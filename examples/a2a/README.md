@@ -1,37 +1,47 @@
-# FHIR Package A2A Agent
+# FHIR Package Mastra Agent
 
-This example demonstrates how to integrate the [FHIR Package Agent](../../) with the [Agent2Agent (A2A) Protocol](https://github.com/a2aproject/a2a-js) to create an A2A-compliant agent for managing FHIR Implementation Guide packages.
+An intelligent AI agent powered by [Mastra AI](https://mastra.ai) that manages FHIR Implementation Guide packages through natural language conversations.
 
-Built with **TypeScript** and **ArkType** for compile-time and runtime type safety.
+Built with **TypeScript**, **ArkType**, and **Mastra AI** for a modern agentic experience.
 
 ## Overview
 
-The FHIR Package A2A Agent exposes the FHIR Package Agent's functionality through the A2A protocol, allowing other A2A agents and clients to:
+The FHIR Package Mastra Agent is an autonomous AI agent that helps you manage FHIR IG packages using natural language. Simply chat with the agent to download packages, list what's cached, or get package information.
 
-- Download and cache FHIR IG packages
-- List cached packages
-- Retrieve package metadata
-
-This enables multi-agent systems where FHIR package management is handled by a specialized agent that can be queried by other agents through a standardized protocol.
+**Key Features:**
+- 🤖 Natural language conversations with the agent
+- 📦 Automatic FHIR package management
+- 🔧 Three specialized tools (ensure, list, info)
+- 🚀 Powered by Mastra AI framework
+- ⚡ Bun native HTTP server
+- 🎯 TypeScript + ArkType type safety
 
 ## Architecture
 
 ```
 ┌─────────────────┐
-│  A2A Client     │  ← Your application or another agent
+│  Client         │  ← Your application (natural language chat)
 └────────┬────────┘
-         │ A2A Protocol (HTTP/JSON)
+         │ HTTP/JSON (chat messages)
          ↓
 ┌─────────────────────────────┐
-│  FHIR Package A2A Agent     │  ← Bun.serve (native server - this example)
-│  - Exposes AgentCard        │
-│  - Handles A2A requests     │
-│  - High-performance routing │
+│  Mastra AI Agent            │  ← Bun.serve (this example)
+│  - Understands requests     │
+│  - Selects appropriate tool │
+│  - Generates responses      │
+└────────┬────────────────────┘
+         │ Tool execution
+         ↓
+┌─────────────────────────────┐
+│  FHIR Package Tools         │
+│  - ensure-fhir-package      │
+│  - list-cached-packages     │
+│  - get-package-info         │
 └────────┬────────────────────┘
          │ CLI spawn
          ↓
 ┌─────────────────────────────┐
-│  FHIR Package Agent         │  ← C# implementation
+│  FHIR Package Agent (C#)    │
 │  - Downloads packages       │
 │  - Manages cache            │
 │  - Verifies integrity       │
@@ -41,15 +51,17 @@ This enables multi-agent systems where FHIR package management is handled by a s
 ## Prerequisites
 
 1. **.NET 8+** - Required to build the FHIR Package Agent
-2. **Bun 1.3+** - Required for the A2A agent (fast JavaScript/TypeScript runtime, compatible with .NET v10)
+2. **Bun 1.3+** - Required for the Mastra agent (fast JavaScript/TypeScript runtime)
+3. **OpenAI API Key** - Required for the AI agent (set as `OPENAI_API_KEY` env var)
 
 ## Features
 
+- **Mastra AI** - Agentic framework with LLM routing and tool orchestration
 - **TypeScript** - Full type safety at compile time
 - **ArkType** - Runtime type validation for robust error handling
 - **Bun** - Fast JavaScript runtime with native TypeScript support
-- **Bun.serve** - Native high-performance HTTP server (faster than Express!)
-- **A2A Protocol** - Standardized agent communication
+- **Bun.serve** - Native high-performance HTTP server
+- **Natural Language** - Chat with the agent in plain English
 
 ## Setup
 
@@ -73,17 +85,27 @@ bun install
 ```
 
 This installs:
-- `@a2a-js/sdk` - A2A protocol implementation
+- `@mastra/core` - Mastra AI framework
 - `arktype` - Runtime type validation
+- `zod` - Schema validation (used by Mastra)
 - TypeScript types for Node.js
 
-No Express needed - we use Bun's native `Bun.serve()` for maximum performance!
+### 3. Set OpenAI API Key
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+Or create a `.env` file:
+```
+OPENAI_API_KEY=your-api-key-here
+```
 
 ## Usage
 
 ### Starting the Server
 
-Start the A2A agent server (Bun runs TypeScript natively):
+Start the Mastra agent server (Bun runs TypeScript natively):
 
 ```bash
 bun run server
@@ -91,27 +113,25 @@ bun run server
 
 No compilation step needed - Bun executes TypeScript directly!
 
-This will start the server on `http://localhost:3000` (configurable via `PORT` and `HOST` environment variables).
-
 You should see:
 
 ```
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
-║   🏥 FHIR Package A2A Agent Server (Bun Native)              ║
+║   🏥 FHIR Package Mastra Agent Server                        ║
 ║                                                                ║
 ║   Server running at: http://localhost:3000                    ║
 ║                                                                ║
-║   Agent Card:  http://localhost:3000/card                     ║
 ║   Health:      http://localhost:3000/health                   ║
-║   Message:     http://localhost:3000/message                  ║
+║   Chat:        http://localhost:3000/chat                     ║
+║   Agent Info:  http://localhost:3000/agent                    ║
 ║                                                                ║
-║   Skills:                                                      ║
-║   - ensure-package: Download and cache FHIR packages          ║
-║   - list-cached: List all cached packages                     ║
-║   - get-package-info: Get package metadata                    ║
+║   Tools:                                                       ║
+║   - ensure-fhir-package: Download and cache FHIR packages     ║
+║   - list-cached-fhir-packages: List all cached packages       ║
+║   - get-fhir-package-info: Get package metadata               ║
 ║                                                                ║
-║   Using Bun's native HTTP server for maximum performance! 🚀 ║
+║   Powered by Mastra AI + Bun 🚀                               ║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 ```
@@ -124,209 +144,222 @@ In a separate terminal, run the client example:
 bun run client
 ```
 
-This will:
-1. Connect to the agent
-2. List cached packages
-3. Download FHIR R4 core package
-4. Get package information
-5. Download US Core package
+This will demonstrate natural language interactions:
+1. "What FHIR packages do I have cached?"
+2. "Please download hl7.fhir.r4.core version 4.0.1"
+3. "Tell me about the hl7.fhir.r4.core package"
+4. "Can you get me the US Core 6.1.0 package?"
+5. "How many packages do I have now?"
 
-### Manual Testing
+### Manual Testing with curl
 
-You can also interact with the agent using curl or any HTTP client:
-
-#### Get the Agent Card
+You can chat with the agent using curl:
 
 ```bash
-curl http://localhost:3000/card
+curl -X POST http://localhost:3000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What FHIR packages do I have?"}'
 ```
 
-Response:
+```bash
+curl -X POST http://localhost:3000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Download hl7.fhir.r4.core version 4.0.1"}'
+```
+
+## API Endpoints
+
+### POST /chat
+
+Chat with the AI agent using natural language.
+
+**Request:**
 ```json
 {
-  "name": "FHIR Package Agent",
-  "description": "An A2A agent for managing FHIR Implementation Guide packages...",
-  "version": "1.0.0",
-  "skills": [
-    {
-      "name": "ensure-package",
-      "description": "Download and ensure a FHIR package is cached locally...",
-      "parameters": [...]
-    },
-    ...
-  ]
+  "message": "Download the US Core 6.1.0 package"
 }
 ```
 
-#### Send a Message
-
-```bash
-curl -X POST http://localhost:3000/message \
-  -H "Content-Type: application/json" \
-  -d '{
-    "messages": [{
-      "role": "user",
-      "parts": [{
-        "type": "text",
-        "text": "ensure package: hl7.fhir.r4.core version: 4.0.1"
-      }]
-    }]
-  }'
+**Response:**
+```json
+{
+  "response": "I've downloaded the hl7.fhir.us.core version 6.1.0 package...",
+  "success": true
+}
 ```
 
-## Available Skills
+### GET /health
 
-### 1. ensure-package
+Health check endpoint.
 
-Downloads and caches a FHIR package.
-
-**Parameters:**
-- `packageId` (string, required): The FHIR package identifier (e.g., `hl7.fhir.us.core`)
-- `version` (string, required): The package version (e.g., `6.1.0`)
-
-**Example message:**
-```
-"ensure package: hl7.fhir.us.core version: 6.1.0"
-```
-
-**Returns:**
-- Success message with package path
-- Artifact with package metadata
-
-### 2. list-cached
-
-Lists all currently cached FHIR packages.
-
-**Parameters:** None
-
-**Example message:**
-```
-"list cached packages"
+**Response:**
+```json
+{
+  "status": "ok",
+  "agent": "FHIR Package Agent",
+  "version": "1.0.0",
+  "framework": "Mastra AI"
+}
 ```
 
-**Returns:**
-- List of cached packages (id and version)
-- Artifact with package details
+### GET /agent
 
-### 3. get-package-info
+Get agent information (name, instructions, tools).
 
-Retrieves detailed information about a cached package.
-
-**Parameters:**
-- `packageId` (string, required): The FHIR package identifier
-- `version` (string, required): The package version
-
-**Example message:**
-```
-"get package info for package: hl7.fhir.r4.core version: 4.0.1"
+**Response:**
+```json
+{
+  "name": "FHIR Package Agent",
+  "instructions": "You are an intelligent FHIR package manager...",
+  "tools": ["ensurePackageTool", "listCachedTool", "getPackageInfoTool"]
+}
 ```
 
-**Returns:**
-- Package name, description, and FHIR versions
-- Artifact with full package metadata
+## Example Conversations
 
-## Configuration
+### Download a Package
+```
+You: Can you download the FHIR R4 core package version 4.0.1?
+Agent: I've successfully downloaded the hl7.fhir.r4.core version 4.0.1
+       package. It's now cached at /home/user/.fhir/packages/hl7.fhir.r4.core#4.0.1
+```
 
-You can customize the agent's behavior through environment variables or by modifying the `FhirPackageAgent` constructor in `server.ts`:
+### List Packages
+```
+You: What packages do I have?
+Agent: You currently have 2 cached FHIR packages:
+       - hl7.fhir.r4.core@4.0.1
+       - hl7.fhir.us.core@6.1.0
+```
+
+### Get Package Info
+```
+You: Tell me about the US Core package
+Agent: The hl7.fhir.us.core version 6.1.0 package is the US Core
+       Implementation Guide. It supports FHIR versions 4.0.1 and is
+       located at /home/user/.fhir/packages/hl7.fhir.us.core#6.1.0
+```
+
+## How It Works
+
+### 1. Tools (tools.ts)
+
+Three specialized tools built with Mastra's `createTool`:
 
 ```typescript
-const fhirAgent = new FhirPackageAgent({
-  // Path to the FHIR agent executable
-  fhirAgentPath: '/path/to/fhir-package-agent',
-
-  // Cache directory (default: ~/.fhir)
-  cacheRoot: '/custom/cache/path',
-
-  // Log level: Debug, Info, Warning, Error (default: Info)
-  logLevel: 'Debug' // Type-safe: only accepts valid log levels
+const ensurePackageTool = createTool({
+  id: 'ensure-fhir-package',
+  description: 'Download and ensure a FHIR package is cached',
+  inputSchema: z.object({
+    packageId: z.string(),
+    version: z.string(),
+  }),
+  execute: async ({ context }) => {
+    // Downloads the package using FHIR agent CLI
+  },
 });
 ```
 
-Options are validated at runtime using ArkType, ensuring type safety even when loading from environment variables or config files.
+### 2. Agent (agent.ts)
+
+The Mastra agent with instructions and tools:
+
+```typescript
+const fhirPackageAgent = new Agent({
+  name: 'FHIR Package Agent',
+  instructions: `You are an intelligent FHIR package manager...`,
+  model: {
+    provider: 'OPEN_AI',
+    name: 'gpt-4',
+    toolChoice: 'auto',
+  },
+  tools: {
+    ensurePackageTool,
+    listCachedTool,
+    getPackageInfoTool,
+  },
+});
+```
+
+### 3. Mastra Instance (mastra.ts)
+
+Registers the agent:
+
+```typescript
+const mastra = new Mastra({
+  agents: {
+    fhirPackageAgent,
+  },
+});
+```
+
+### 4. Server (server.ts)
+
+Exposes the agent via HTTP:
+
+```typescript
+const agent = mastra.getAgent('fhirPackageAgent');
+const result = await agent.generate(message);
+```
+
+## Configuration
 
 ### Environment Variables
 
 - `PORT`: Server port (default: 3000)
 - `HOST`: Server host (default: localhost)
+- `OPENAI_API_KEY`: Your OpenAI API key (required)
 - `AGENT_URL`: Agent URL for client (default: http://localhost:3000)
 
-## Integration with Other Agents
+### Customizing the Agent
 
-The FHIR Package A2A Agent can be integrated into multi-agent systems. Here's an example of how another agent might use it:
+You can modify the agent's behavior in `agent.ts`:
 
 ```typescript
-import { A2AClient } from '@a2a-js/sdk';
-
-async function myAgent() {
-  // Connect to the FHIR Package Agent
-  const fhirAgent = await A2AClient.fromCardUrl('http://localhost:3000/card');
-
-  // Request a package (fully typed)
-  const response = await fhirAgent.sendMessage({
-    role: 'user',
-    parts: [{
-      type: 'text',
-      text: 'ensure package: hl7.fhir.us.core version: 6.1.0'
-    }]
-  });
-
-  // TypeScript knows the structure of the response
-  const packagePath = response.task?.artifacts?.[0]?.data?.path;
-
-  // Now you can read FHIR resources from the package
-  console.log('Package available at:', packagePath);
-}
-```
-
-## Use Cases
-
-1. **Multi-Agent Healthcare Systems**: Multiple specialized agents (data validators, profile checkers, terminology servers) coordinate through A2A, with the FHIR Package Agent providing access to canonical FHIR definitions.
-
-2. **FHIR Validation Services**: A validation agent can request specific FHIR profiles and value sets on-demand without maintaining its own package cache.
-
-3. **Dynamic Implementation Guide Access**: Agents can discover and download FHIR IGs based on runtime requirements rather than bundling all profiles at build time.
-
-4. **Educational Tools**: Interactive learning systems where students query FHIR resources and the agent fetches the latest definitions from official registries.
-
-## Files
-
-- `agent.ts` - Core FHIR Package A2A Agent implementation (TypeScript + ArkType)
-- `server.ts` - Bun native server (`Bun.serve`) that exposes the agent
-- `client.ts` - Example client demonstrating agent usage
-- `package.json` - Bun project configuration
-- `tsconfig.json` - TypeScript configuration
-- `.gitignore` - Git ignore patterns
-- `README.md` - This file
-
-## TypeScript and ArkType
-
-This project uses **TypeScript** for compile-time type safety and **ArkType** for runtime validation:
-
-### Compile-Time Safety (TypeScript)
-```typescript
-// TypeScript catches errors at development time
-const agent = new FhirPackageAgent({
-  logLevel: 'Invalid' // ❌ TypeScript error: not a valid log level
+export const fhirPackageAgent = new Agent({
+  name: 'FHIR Package Agent',
+  instructions: `Your custom instructions here...`,
+  model: {
+    provider: 'OPEN_AI',
+    name: 'gpt-4',  // or 'gpt-4o-mini', 'gpt-3.5-turbo'
+    toolChoice: 'auto',
+  },
+  tools: {
+    // Add more tools here
+  },
 });
 ```
 
-### Runtime Safety (ArkType)
-```typescript
-// ArkType validates data at runtime (e.g., from config files)
-const options = loadFromConfig(); // unknown data
-const agent = new FhirPackageAgent(options); // ✓ Validated by ArkType
-```
+## Files
 
-### Type Checking
+- `tools.ts` - FHIR package tools (ensure, list, info)
+- `agent.ts` - Mastra agent configuration
+- `mastra.ts` - Mastra instance setup
+- `server.ts` - Bun native HTTP server
+- `client.ts` - Example client demonstrating usage
+- `package.json` - Bun project configuration
+- `tsconfig.json` - TypeScript configuration
+- `README.md` - This file
 
-Run TypeScript type checker:
-```bash
-bun run typecheck
-```
+## Why Mastra AI?
+
+**Mastra** is a modern TypeScript framework for building AI agents that provides:
+
+- **Autonomous Agents** - Agents reason about goals and decide which tools to use
+- **Tool Orchestration** - Seamless integration of custom tools with LLMs
+- **LLM Routing** - Support for multiple providers (OpenAI, Anthropic, Gemini, etc.)
+- **Observability** - Built-in logging and monitoring
+- **TypeScript-First** - Full type safety and excellent DX
+
+Unlike traditional API wrappers, Mastra agents can:
+- Understand natural language requests
+- Automatically select the right tool
+- Chain multiple tools together
+- Provide conversational responses
 
 ## Troubleshooting
 
-### "Cannot find module '@a2a-js/sdk'"
+### "Cannot find module '@mastra/core'"
 
 Run `bun install` to install dependencies.
 
@@ -337,24 +370,23 @@ Make sure you've built the FHIR Package Agent:
 cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin
 ```
 
+### "OpenAI API error"
+
+Ensure your `OPENAI_API_KEY` environment variable is set:
+```bash
+export OPENAI_API_KEY="your-key-here"
+```
+
 ### "Connection refused"
 
 Ensure the server is running (`bun run server`) before running the client.
 
-### "Package download failed"
-
-Check your internet connection and verify the package ID and version are correct. You can test the underlying FHIR agent directly:
-
-```bash
-../../bin/fhir-package-agent ensure hl7.fhir.r4.core 4.0.1 --log-level Debug
-```
-
 ## Learn More
 
-- [FHIR Package Agent Documentation](../../README.md)
-- [Agent2Agent Protocol](https://github.com/a2aproject/a2a-js)
-- [FHIR Implementation Guides](https://fhir.org/guides/registry/)
+- [Mastra AI Documentation](https://mastra.ai/docs)
+- [Mastra GitHub](https://github.com/mastra-ai/mastra)
 - [FHIR Package Registry](https://packages.fhir.org/)
+- [FHIR Implementation Guides](https://fhir.org/guides/registry/)
 
 ## License
 
