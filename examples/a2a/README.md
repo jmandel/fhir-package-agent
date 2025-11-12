@@ -65,19 +65,7 @@ The FHIR Package Mastra Agent is an autonomous AI agent that helps you manage FH
 
 ## Setup
 
-### 1. Build the FHIR Package Agent
-
-First, build the underlying FHIR Package Agent:
-
-```bash
-# From the project root
-cd ../..
-dotnet publish fhir-package-agent.csproj -c Release -o bin
-```
-
-This creates the `bin/fhir-package-agent` executable.
-
-### 2. Install Dependencies with Bun
+### 1. Install Dependencies with Bun
 
 ```bash
 # From this directory (examples/a2a)
@@ -89,6 +77,16 @@ This installs:
 - `arktype` - Runtime type validation
 - `zod` - Schema validation (used by Mastra)
 - TypeScript types for Node.js
+
+### 2. Build the FHIR Package Agent
+
+Build the underlying FHIR Package Agent using the provided script:
+
+```bash
+bun run build:fhir-agent
+```
+
+This executes the build script defined in `package.json` and creates the `../../bin/fhir-package-agent` executable.
 
 ### 3. Set OpenAI API Key
 
@@ -367,7 +365,7 @@ Run `bun install` to install dependencies.
 
 Make sure you've built the FHIR Package Agent:
 ```bash
-cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin
+bun run build:fhir-agent
 ```
 
 ### "OpenAI API error"

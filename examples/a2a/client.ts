@@ -1,3 +1,5 @@
+import { type } from 'arktype';
+
 /**
  * FHIR Package Mastra Agent Client Example
  *
@@ -7,11 +9,19 @@
 
 const AGENT_URL = process.env.AGENT_URL || 'http://localhost:3000';
 
-interface ChatResponse {
-  response: string;
-  success: boolean;
-  error?: string;
-}
+// ArkType schemas for runtime validation
+const ChatResponseSchema = type({
+  response: 'string',
+  success: 'boolean',
+  'error?': 'string'
+});
+
+const HealthResponseSchema = type({
+  status: 'string',
+  agent: 'string',
+  version: 'string',
+  framework: 'string'
+});
 
 async function chat(message: string): Promise<string> {
   const response = await fetch(`${AGENT_URL}/chat`, {
@@ -22,13 +32,20 @@ async function chat(message: string): Promise<string> {
     body: JSON.stringify({ message }),
   });
 
-  const data = await response.json() as ChatResponse;
+  const data = await response.json();
 
-  if (!data.success) {
-    throw new Error(data.error || 'Chat request failed');
+  // Validate response with ArkType
+  const validatedData = ChatResponseSchema(data);
+
+  if (validatedData instanceof type.errors) {
+    throw new Error(`Invalid response from server: ${validatedData.summary}`);
   }
 
-  return data.response;
+  if (!validatedData.success) {
+    throw new Error(validatedData.error || 'Chat request failed');
+  }
+
+  return validatedData.response;
 }
 
 async function main(): Promise<void> {
@@ -37,7 +54,15 @@ async function main(): Promise<void> {
   try {
     // Check health
     const healthResponse = await fetch(`${AGENT_URL}/health`);
-    const health = await healthResponse.json();
+    const healthData = await healthResponse.json();
+
+    // Validate health response with ArkType
+    const health = HealthResponseSchema(healthData);
+
+    if (health instanceof type.errors) {
+      throw new Error(`Invalid health response: ${health.summary}`);
+    }
+
     console.log('✓ Connected to:', health.agent);
     console.log('  Framework:', health.framework);
     console.log();

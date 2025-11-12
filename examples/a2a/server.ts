@@ -1,3 +1,4 @@
+import { type } from 'arktype';
 import { mastra } from './mastra.js';
 
 /**
@@ -10,15 +11,16 @@ import { mastra } from './mastra.js';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || 'localhost';
 
+// ArkType schemas for runtime validation
+const ChatRequestSchema = type({
+  message: 'string>0'  // Non-empty string
+});
+
 interface HealthResponse {
   status: string;
   agent: string;
   version: string;
   framework: string;
-}
-
-interface ChatRequest {
-  message: string;
 }
 
 interface ChatResponse {
@@ -62,18 +64,26 @@ const server = Bun.serve({
     // Route: POST /chat - Chat with the agent
     if (url.pathname === '/chat' && req.method === 'POST') {
       try {
-        const body = await req.json() as ChatRequest;
-        const message = body.message;
+        const body = await req.json();
 
-        if (!message) {
+        // Validate request body with ArkType
+        const validatedBody = ChatRequestSchema(body);
+
+        if (validatedBody instanceof type.errors) {
           return Response.json(
-            { error: 'Message is required', success: false },
+            {
+              error: 'Invalid request body',
+              details: validatedBody.summary,
+              success: false
+            },
             {
               status: 400,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
           );
         }
+
+        const message = validatedBody.message;
 
         // Get the agent
         const agent = mastra.getAgent('fhirPackageAgent');
