@@ -23,9 +23,10 @@ This enables multi-agent systems where FHIR package management is handled by a s
          │ A2A Protocol (HTTP/JSON)
          ↓
 ┌─────────────────────────────┐
-│  FHIR Package A2A Agent     │  ← Express.js server (this example)
+│  FHIR Package A2A Agent     │  ← Bun.serve (native server - this example)
 │  - Exposes AgentCard        │
 │  - Handles A2A requests     │
+│  - High-performance routing │
 └────────┬────────────────────┘
          │ CLI spawn
          ↓
@@ -47,7 +48,7 @@ This enables multi-agent systems where FHIR package management is handled by a s
 - **TypeScript** - Full type safety at compile time
 - **ArkType** - Runtime type validation for robust error handling
 - **Bun** - Fast JavaScript runtime with native TypeScript support
-- **Express.js** - Battle-tested HTTP server
+- **Bun.serve** - Native high-performance HTTP server (faster than Express!)
 - **A2A Protocol** - Standardized agent communication
 
 ## Setup
@@ -74,8 +75,9 @@ bun install
 This installs:
 - `@a2a-js/sdk` - A2A protocol implementation
 - `arktype` - Runtime type validation
-- `express` - HTTP server framework
-- TypeScript types for Node.js and Express
+- TypeScript types for Node.js
+
+No Express needed - we use Bun's native `Bun.serve()` for maximum performance!
 
 ## Usage
 
@@ -96,17 +98,20 @@ You should see:
 ```
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
-║   🏥 FHIR Package A2A Agent Server                           ║
+║   🏥 FHIR Package A2A Agent Server (Bun Native)              ║
 ║                                                                ║
 ║   Server running at: http://localhost:3000                    ║
 ║                                                                ║
 ║   Agent Card:  http://localhost:3000/card                     ║
 ║   Health:      http://localhost:3000/health                   ║
+║   Message:     http://localhost:3000/message                  ║
 ║                                                                ║
 ║   Skills:                                                      ║
 ║   - ensure-package: Download and cache FHIR packages          ║
 ║   - list-cached: List all cached packages                     ║
 ║   - get-package-info: Get package metadata                    ║
+║                                                                ║
+║   Using Bun's native HTTP server for maximum performance! 🚀 ║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 ```
@@ -286,7 +291,7 @@ async function myAgent() {
 ## Files
 
 - `agent.ts` - Core FHIR Package A2A Agent implementation (TypeScript + ArkType)
-- `server.ts` - Express.js server that exposes the agent
+- `server.ts` - Bun native server (`Bun.serve`) that exposes the agent
 - `client.ts` - Example client demonstrating agent usage
 - `package.json` - Bun project configuration
 - `tsconfig.json` - TypeScript configuration
