@@ -5,16 +5,17 @@
   "type": "module",
   "main": "agent.js",
   "scripts": {
-    "server": "node server.js",
-    "client": "node client.js",
+    "server": "bun run server.js",
+    "client": "bun run client.js",
     "build:fhir-agent": "cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin",
-    "test": "node test.js"
+    "test": "bun run test.js"
   },
   "keywords": [
     "fhir",
     "a2a",
     "agent",
-    "healthcare"
+    "healthcare",
+    "bun"
   ],
   "author": "",
   "license": "MIT",
@@ -23,6 +24,6 @@
     "express": "^4.18.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "bun": ">=1.0.0"
   }
 }

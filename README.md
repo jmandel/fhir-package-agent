@@ -96,11 +96,11 @@ See [`examples/a2a/README.md`](examples/a2a/README.md) for full documentation an
 Quick start:
 ```bash
 cd examples/a2a
-npm install
-npm run server  # Start A2A agent server
+bun install
+bun run server  # Start A2A agent server
 
 # In another terminal
-npm run client  # Run example client
+bun run client  # Run example client
 ```
 
 ## CLI Options

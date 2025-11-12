@@ -38,8 +38,7 @@ This enables multi-agent systems where FHIR package management is handled by a s
 ## Prerequisites
 
 1. **.NET 8+** - Required to build the FHIR Package Agent
-2. **Node.js 18+** - Required for the A2A agent
-3. **npm** - For installing dependencies
+2. **Bun 1.0+** - Required for the A2A agent (fast JavaScript runtime)
 
 ## Setup
 
@@ -55,11 +54,11 @@ dotnet publish fhir-package-agent.csproj -c Release -o bin
 
 This creates the `bin/fhir-package-agent` executable.
 
-### 2. Install Node.js Dependencies
+### 2. Install Dependencies with Bun
 
 ```bash
 # From this directory (examples/a2a)
-npm install
+bun install
 ```
 
 ## Usage
@@ -69,7 +68,7 @@ npm install
 Start the A2A agent server:
 
 ```bash
-npm run server
+bun run server
 ```
 
 This will start the server on `http://localhost:3000` (configurable via `PORT` and `HOST` environment variables).
@@ -99,7 +98,7 @@ You should see:
 In a separate terminal, run the client example:
 
 ```bash
-npm run client
+bun run client
 ```
 
 This will:
@@ -269,14 +268,14 @@ async function myAgent() {
 - `agent.js` - Core FHIR Package A2A Agent implementation
 - `server.js` - Express.js server that exposes the agent
 - `client.js` - Example client demonstrating agent usage
-- `package.json` - Node.js project configuration
+- `package.json` - Bun project configuration
 - `README.md` - This file
 
 ## Troubleshooting
 
 ### "Cannot find module '@a2a-js/sdk'"
 
-Run `npm install` to install dependencies.
+Run `bun install` to install dependencies.
 
 ### "FHIR agent not found"
 
@@ -287,7 +286,7 @@ cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin
 
 ### "Connection refused"
 
-Ensure the server is running (`npm run server`) before running the client.
+Ensure the server is running (`bun run server`) before running the client.
 
 ### "Package download failed"
 
