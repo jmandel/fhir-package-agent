@@ -38,7 +38,7 @@ This enables multi-agent systems where FHIR package management is handled by a s
 ## Prerequisites
 
 1. **.NET 8+** - Required to build the FHIR Package Agent
-2. **Bun 1.0+** - Required for the A2A agent (fast JavaScript runtime)
+2. **Bun 1.3+** - Required for the A2A agent (fast JavaScript runtime, compatible with .NET v10)
 
 ## Setup
 
