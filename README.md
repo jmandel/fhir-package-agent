@@ -80,6 +80,36 @@ var path = await FhirIgClient.EnsureAsync(
 );
 ```
 
+## Examples
+
+### Mastra AI Agent Integration
+
+The `examples/a2a/` directory contains an **intelligent AI agent** powered by [Mastra AI](https://mastra.ai) that manages FHIR packages through natural language conversations.
+
+This enables:
+- **Natural language interactions** - Chat with the agent to manage FHIR packages
+- **Autonomous tool selection** - Agent automatically chooses the right tool
+- **Multi-agent systems** - Integrates with other Mastra AI agents
+- **LLM-powered** - Uses GPT-4 to understand and respond to requests
+
+**Example conversations:**
+- "Download the FHIR R4 core package version 4.0.1"
+- "What packages do I have cached?"
+- "Tell me about the US Core IG"
+
+See [`examples/a2a/README.md`](examples/a2a/README.md) for full documentation and usage examples.
+
+Quick start:
+```bash
+cd examples/a2a
+bun install
+export OPENAI_API_KEY="your-api-key"
+bun run server  # Start Mastra AI agent server
+
+# In another terminal
+bun run client  # Chat with the agent
+```
+
 ## CLI Options
 
 | Option | Description | Default |

@@ -1,0 +1,36 @@
+{
+  "name": "fhir-package-mastra-agent",
+  "version": "1.0.0",
+  "description": "FHIR Package Agent powered by Mastra AI with TypeScript and ArkType",
+  "type": "module",
+  "main": "mastra.ts",
+  "scripts": {
+    "server": "bun run server.ts",
+    "client": "bun run client.ts",
+    "build:fhir-agent": "cd ../.. && dotnet publish fhir-package-agent.csproj -c Release -o bin",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "fhir",
+    "mastra",
+    "agent",
+    "healthcare",
+    "bun",
+    "typescript",
+    "arktype",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@mastra/core": "^0.1.0",
+    "arktype": "^2.0.0-rc.13",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  }
+}
